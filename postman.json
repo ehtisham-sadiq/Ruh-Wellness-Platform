@@ -1,0 +1,118 @@
+{
+  "info": {
+    "name": "Virtual Wellness Platform Mock API",
+    "_postman_id": "mock-health-api-id",
+    "description": "Mock API for testing client and appointment management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Clients",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer YOUR_API_KEY",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://mock.api/clients",
+          "protocol": "https",
+          "host": [
+            "mock",
+            "api"
+          ],
+          "path": [
+            "clients"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Get Clients Response",
+          "status": "OK",
+          "code": 200,
+          "body": "[{\"id\": \"1\", \"name\": \"John Doe\", \"email\": \"john@example.com\", \"phone\": \"1234567890\"}, {\"id\": \"2\", \"name\": \"Jane Smith\", \"email\": \"jane@example.com\", \"phone\": \"9876543210\"}]",
+          "header": []
+        }
+      ]
+    },
+    {
+      "name": "Get Appointments",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer YOUR_API_KEY",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://mock.api/appointments",
+          "protocol": "https",
+          "host": [
+            "mock",
+            "api"
+          ],
+          "path": [
+            "appointments"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Get Appointments Response",
+          "status": "OK",
+          "code": 200,
+          "body": "[{\"id\": \"a1\", \"client_id\": \"1\", \"time\": \"2025-07-10T10:00:00Z\"}, {\"id\": \"a2\", \"client_id\": \"2\", \"time\": \"2025-07-11T11:00:00Z\"}]",
+          "header": []
+        }
+      ]
+    },
+    {
+      "name": "Create Appointment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer YOUR_API_KEY",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"client_id\": \"1\", \"time\": \"2025-07-15T09:00:00Z\"}"
+        },
+        "url": {
+          "raw": "https://mock.api/appointments",
+          "protocol": "https",
+          "host": [
+            "mock",
+            "api"
+          ],
+          "path": [
+            "appointments"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Create Appointment Response",
+          "status": "Created",
+          "code": 201,
+          "body": "{\"id\": \"a3\", \"client_id\": \"1\", \"time\": \"2025-07-15T09:00:00Z\"}",
+          "header": []
+        }
+      ]
+    }
+  ]
+}

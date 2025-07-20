@@ -1,0 +1,306 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Healthcare Typography Hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-calm-900;
+  }
+
+  h1 {
+    @apply text-4xl lg:text-5xl leading-tight;
+  }
+
+  h2 {
+    @apply text-3xl lg:text-4xl leading-tight;
+  }
+
+  h3 {
+    @apply text-2xl lg:text-3xl leading-snug;
+  }
+
+  h4 {
+    @apply text-xl lg:text-2xl leading-snug;
+  }
+
+  h5 {
+    @apply text-lg lg:text-xl leading-normal;
+  }
+
+  h6 {
+    @apply text-base lg:text-lg leading-normal;
+  }
+
+  p {
+    @apply text-base leading-relaxed text-calm-700;
+  }
+
+  /* Healthcare-specific focus styles */
+  .focus-healthcare {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2;
+  }
+
+  /* Accessible button styles */
+  .btn-healthcare {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-healthcare disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 border border-primary-600;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-secondary-700 hover:bg-secondary-50 border border-secondary-300;
+  }
+
+  .btn-success {
+    @apply bg-success-600 text-white hover:bg-success-700 focus:ring-success-500 border border-success-600;
+  }
+
+  .btn-error {
+    @apply bg-error-600 text-white hover:bg-error-700 focus:ring-error-500 border border-error-600;
+  }
+
+  /* Card styles for healthcare */
+  .card-healthcare {
+    @apply bg-white border border-secondary-200 rounded-lg shadow-sm;
+  }
+
+  .card-header {
+    @apply p-6 pb-4;
+  }
+
+  .card-content {
+    @apply p-6;
+  }
+
+  /* Form styles */
+  .input-healthcare {
+    @apply flex h-10 w-full rounded-md border border-secondary-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-secondary-500 focus-healthcare disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .label-healthcare {
+    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-secondary-700;
+  }
+
+  /* Dialog and Modal styles */
+  .dialog-overlay {
+    @apply fixed inset-0 z-50 bg-black/50 backdrop-blur-sm;
+  }
+
+  .dialog-content {
+    @apply fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-secondary-200 bg-white p-6 shadow-lg duration-200 sm:rounded-lg;
+  }
+
+  /* Toast styles */
+  .toast-viewport {
+    @apply fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px];
+  }
+
+  /* Select styles */
+  .select-trigger {
+    @apply flex h-10 w-full items-center justify-between rounded-md border border-secondary-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .select-content {
+    @apply relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-secondary-200 bg-white text-secondary-950 shadow-lg;
+  }
+
+  /* Accordion animations */
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+
+  .animate-accordion-down {
+    animation: accordion-down 0.2s ease-out;
+  }
+
+  .animate-accordion-up {
+    animation: accordion-up 0.2s ease-out;
+  }
+
+  /* Status indicators */
+  .status-scheduled {
+    @apply bg-primary-50 text-primary-800 border border-primary-200;
+  }
+
+  .status-completed {
+    @apply bg-success-50 text-success-800 border border-success-200;
+  }
+
+  .status-cancelled {
+    @apply bg-error-50 text-error-800 border border-error-200;
+  }
+
+  .status-pending {
+    @apply bg-secondary-50 text-secondary-800 border border-secondary-200;
+  }
+}
+
+@layer components {
+  /* Professional Healthcare Design System */
+  
+  /* Table styles - clean and clinical */
+  .table-healthcare {
+    @apply w-full border-collapse bg-white;
+  }
+
+  .table-header {
+    @apply bg-secondary-50 border-b border-secondary-200;
+  }
+
+  .table-row {
+    @apply border-b border-secondary-100 hover:bg-secondary-50/50 transition-colors;
+  }
+
+  .table-cell {
+    @apply px-4 py-3 text-sm text-secondary-900;
+  }
+
+  /* Navigation styles - sidebar like Epic/Cerner */
+  .nav-sidebar {
+    @apply bg-white border-r border-secondary-200 shadow-sm;
+  }
+
+  .nav-item {
+    @apply flex items-center px-3 py-2 text-sm font-medium text-secondary-700 rounded-md hover:bg-secondary-100 hover:text-secondary-900 transition-colors;
+  }
+
+  .nav-item-active {
+    @apply bg-primary-50 text-primary-700 border-r-2 border-primary-600;
+  }
+
+  /* Professional spacing system */
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+
+  .space-y-6 > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .space-y-8 > * + * {
+    margin-top: 2rem;
+  }
+
+  /* Typography hierarchy */
+  .text-heading {
+    @apply text-secondary-900 font-semibold;
+  }
+
+  .text-body {
+    @apply text-secondary-700;
+  }
+
+  .text-muted {
+    @apply text-secondary-500;
+  }
+
+  .text-caption {
+    @apply text-secondary-400 text-xs;
+  }
+
+  /* Grid Area Utilities for SPA Layout */
+  .grid-areas-layout {
+    grid-template-areas: 'header header' 'sidebar main';
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: 60px 1fr;
+  }
+
+  .grid-area-header {
+    grid-area: header;
+  }
+
+  .grid-area-sidebar {
+    grid-area: sidebar;
+  }
+
+  .grid-area-main {
+    grid-area: main;
+  }
+
+  /* Responsive grid areas */
+  @media (max-width: 768px) {
+    .grid-areas-layout {
+      grid-template-areas: 'header' 'main';
+      grid-template-columns: 1fr;
+      grid-template-rows: 60px 1fr;
+    }
+  }
+}
+
