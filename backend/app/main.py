@@ -8,8 +8,9 @@ from typing import List
 import uvicorn
 import asyncio
 import logging
+import os
 
-from .db.database import engine, get_db
+from .db.database import engine, get_db, DATABASE_URL
 from .models import models
 from .api import clients, appointments, analytics
 from .services.mock_api_service import MockAPIService
@@ -24,9 +25,6 @@ from .core.error_handlers import (
     HTTPException
 )
 
-# Create tables
-models.Base.metadata.create_all(bind=engine)
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,10 +35,22 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Startup event to create tables
+@app.on_event("startup")
+async def startup_event():
+    try:
+        # Create tables
+        models.Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Failed to create database tables: {e}")
+        # Don't raise the exception to allow the app to start
+        # Tables might already exist
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -86,26 +96,39 @@ async def health_check():
 @app.get("/health/detailed")
 async def detailed_health_check():
     """Detailed health check with database connectivity"""
+    from datetime import datetime
+    import traceback
+    
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "database": {"status": "unknown"},
+        "services": {}
+    }
+    
+    # Test database connection
     try:
         db = next(get_db())
-        # Simple query to test connection
         from sqlalchemy import text
         db.execute(text("SELECT 1"))
+        db.close()
         
-        return {
+        health_status["database"] = {
             "status": "healthy",
-            "database": {
-                "status": "healthy",
-                "timestamp": "2024-01-01T00:00:00Z"
-            },
-            "timestamp": "2024-01-01T00:00:00Z"
+            "connection_url": DATABASE_URL.split("@")[1] if "@" in DATABASE_URL else "localhost"  # Hide credentials
         }
     except Exception as e:
-        return {
+        health_status["status"] = "unhealthy"
+        health_status["database"] = {
             "status": "unhealthy",
-            "database": {"status": "unhealthy", "error": str(e)},
-            "timestamp": "2024-01-01T00:00:00Z"
+            "error": str(e),
+            "error_type": type(e).__name__
         }
+        if os.getenv("DEBUG", "false").lower() == "true":
+            health_status["database"]["traceback"] = traceback.format_exc()
+    
+    return health_status
 
 @app.post("/sync")
 async def manual_sync(db: Session = Depends(get_db)):
