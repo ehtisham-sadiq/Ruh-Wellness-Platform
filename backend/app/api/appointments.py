@@ -18,6 +18,44 @@ from ..services.mock_api_service import MockAPIService
 
 router = APIRouter()
 
+def _check_appointment_conflicts_internal(
+    client_id: str,
+    appointment_time: datetime,
+    appointment_duration: int = 60,
+    exclude_appointment_id: Optional[str] = None,
+    db: Session = None
+):
+    """Internal helper function to check for appointment conflicts"""
+    # Calculate time window
+    start_time = appointment_time
+    end_time = appointment_time + timedelta(minutes=appointment_duration)
+    
+    # Query for conflicting appointments
+    query = db.query(Appointment).filter(
+        Appointment.client_id == client_id,
+        Appointment.status.in_(["scheduled", "completed"]),
+        Appointment.time < end_time,
+        Appointment.time + timedelta(minutes=60) > start_time  # Assume 60-minute appointments
+    )
+    
+    if exclude_appointment_id:
+        query = query.filter(Appointment.id != exclude_appointment_id)
+    
+    conflicts = query.all()
+    
+    return {
+        "has_conflicts": len(conflicts) > 0,
+        "conflicts": [
+            {
+                "id": apt.id,
+                "time": apt.time,
+                "status": apt.status,
+                "client_name": apt.client.name if apt.client else "Unknown"
+            }
+            for apt in conflicts
+        ]
+    }
+
 @router.get("/", response_model=List[AppointmentWithClient])
 async def get_appointments(
     client_id: Optional[str] = Query(None, description="Filter by client ID"),
@@ -185,10 +223,12 @@ async def create_appointment(appointment_data: AppointmentCreate, db: Session = 
         raise HTTPException(status_code=404, detail="Client not found")
     
     # Check for conflicts
-    conflicts = await check_appointment_conflicts(
+    conflicts = _check_appointment_conflicts_internal(
         appointment_data.client_id,
         appointment_data.time,
-        db=db
+        60,
+        None,
+        db
     )
     
     if conflicts["has_conflicts"]:
@@ -235,10 +275,12 @@ async def create_recurring_appointments(
     
     for i in range(count):
         # Check for conflicts
-        conflicts = await check_appointment_conflicts(
+        conflicts = _check_appointment_conflicts_internal(
             base_appointment.client_id,
             current_time,
-            db=db
+            60,
+            None,
+            db
         )
         
         if not conflicts["has_conflicts"]:
@@ -288,11 +330,12 @@ async def update_appointment(appointment_id: str, appointment_data: AppointmentU
     
     # Check for conflicts if time is being changed
     if appointment_data.time and appointment_data.time != appointment.time:
-        conflicts = await check_appointment_conflicts(
+        conflicts = _check_appointment_conflicts_internal(
             appointment.client_id,
             appointment_data.time,
-            exclude_appointment_id=appointment_id,
-            db=db
+            60,
+            appointment_id,
+            db
         )
         
         if conflicts["has_conflicts"]:

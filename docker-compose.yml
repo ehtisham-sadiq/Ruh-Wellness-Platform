@@ -27,7 +27,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:1234@db:5432/wellness_db
       - MOCK_API_URL=https://60c971f5-2236-4384-9d53-730464ab7ddb.mock.pstmn.io
-      - MOCK_API_KEY=YOUR_POSTMAN_API_KEY_HERE
+      - MOCK_API_KEY=your-api-key-here
     ports:
       - "8000:8000"
     volumes:
