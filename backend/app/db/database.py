@@ -4,7 +4,16 @@ from sqlalchemy.orm import sessionmaker # type: ignore
 import os
 
 # Database URL from environment variable or default
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:1234@localhost/wellness_db")
+# For Railway, use the default database name (usually 'railway')
+DEFAULT_DB_URL = "postgresql://postgres:1234@localhost/wellness_db"
+RAILWAY_DEFAULT_DB_URL = "postgresql://postgres:1234@localhost/railway"
+
+# Use Railway default if in production
+environment = os.getenv("ENVIRONMENT", "development")
+if environment == "production":
+    DATABASE_URL = os.getenv("DATABASE_URL", RAILWAY_DEFAULT_DB_URL)
+else:
+    DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DB_URL)
 
 # Create engine with SSL configuration for production
 environment = os.getenv("ENVIRONMENT", "development")

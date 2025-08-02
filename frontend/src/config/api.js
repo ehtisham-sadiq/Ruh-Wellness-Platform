@@ -3,7 +3,7 @@ const getApiBaseUrl = () => {
   // Check if we're in production (Vercel)
   if (process.env.NODE_ENV === 'production') {
     // Use Railway backend URL in production
-    return process.env.REACT_APP_API_URL || 'https://your-railway-backend-url.railway.app';
+    return process.env.REACT_APP_API_URL || 'https://ruh-wellness-platform-production.up.railway.app';
   }
   
   // Use localhost for development
