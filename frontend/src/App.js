@@ -23,7 +23,6 @@ const ProfessionalDashboard = () => {
   const [showDeleteAppointmentModal, setShowDeleteAppointmentModal] = useState(false);
   const [showAppointmentDetailsModal, setShowAppointmentDetailsModal] = useState(false);
   const [showAppointmentAnalyticsModal, setShowAppointmentAnalyticsModal] = useState(false);
-  const [showAppointmentTrendsModal, setShowAppointmentTrendsModal] = useState(false);
   const [showRecurringAppointmentModal, setShowRecurringAppointmentModal] = useState(false);
   const [showConflictCheckModal, setShowConflictCheckModal] = useState(false);
   const [showRemindersModal, setShowRemindersModal] = useState(false);
@@ -31,12 +30,8 @@ const ProfessionalDashboard = () => {
   // Loading states
   const [isAddingClient, setIsAddingClient] = useState(false);
   const [isAddingAppointment, setIsAddingAppointment] = useState(false);
-  const [isUpdatingClient, setIsUpdatingClient] = useState(false);
-  const [isDeletingClient, setIsDeletingClient] = useState(false);
   const [isUpdatingAppointment, setIsUpdatingAppointment] = useState(false);
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
-  const [isCheckingConflicts, setIsCheckingConflicts] = useState(false);
-  const [isCreatingRecurring, setIsCreatingRecurring] = useState(false);
   const [isSendingReminder, setIsSendingReminder] = useState(false);
   
   // Backend status (legacy - kept for compatibility but not used)
@@ -70,7 +65,6 @@ const ProfessionalDashboard = () => {
   // Selected appointment state
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentAnalytics, setAppointmentAnalytics] = useState(null);
-  const [appointmentTrends, setAppointmentTrends] = useState(null);
   const [appointmentConflicts, setAppointmentConflicts] = useState([]);
   const [pendingReminders, setPendingReminders] = useState([]);
   
@@ -319,7 +313,7 @@ const ProfessionalDashboard = () => {
 
     const cleanup = startSystemStatusMonitoring();
     return cleanup;
-  }, []); // Remove checkSystemStatus from dependencies
+  }, [checkSystemStatus]);
 
   // Test backend connection
   const testBackendConnection = async () => {
@@ -506,6 +500,12 @@ const ProfessionalDashboard = () => {
   // Update client
   const handleUpdateClient = async (e) => {
     e.preventDefault();
+    
+    if (!selectedClient) {
+      alert('No client selected for update');
+      return;
+    }
+    
     try {
       const response = await fetch(`http://localhost:8000/api/clients/${selectedClient.id}`, {
         method: 'PUT',
@@ -522,11 +522,14 @@ const ProfessionalDashboard = () => {
         ));
         setShowEditClientModal(false);
         setSelectedClient(null);
+        alert('Client updated successfully!');
       } else {
-        console.error('Failed to update client');
+        const errorData = await response.json().catch(() => ({}));
+        alert(`Failed to update client: ${errorData.detail || errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error updating client:', error);
+      alert(`Error updating client: ${error.message || 'Network error'}`);
     }
   };
 
@@ -731,28 +734,6 @@ const ProfessionalDashboard = () => {
     }
   };
 
-  // Get appointment trends
-  const handleGetAppointmentTrends = async () => {
-    try {
-      console.log('Fetching appointment trends...');
-      
-      const response = await fetch('http://localhost:8000/api/appointments/trends');
-      
-      if (response.ok) {
-        const trends = await response.json();
-        setAppointmentTrends(trends);
-        setShowAppointmentTrendsModal(true);
-        console.log('Appointment trends:', trends);
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        alert(`Failed to fetch trends: ${errorData.detail || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Error fetching appointment trends:', error);
-      alert(`Error fetching trends: ${error.message || 'Network error'}`);
-    }
-  };
-
   // Create recurring appointments
   const handleCreateRecurringAppointments = async (e) => {
     e.preventDefault();
@@ -864,7 +845,7 @@ const ProfessionalDashboard = () => {
         console.log('Appointment updated:', updatedAppointment);
         
         setAppointments(prev => prev.map(apt => 
-          apt.id === selectedAppointment.id ? updatedAppointment : apt
+          apt.id === selectedAppointment.id ? { ...updatedAppointment, client: apt.client } : apt
         ));
         setShowEditAppointmentModal(false);
         setSelectedAppointment(null);
@@ -1009,12 +990,6 @@ const ProfessionalDashboard = () => {
   const TrendUpIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-    </svg>
-  );
-
-  const ActivityIcon = () => (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
     </svg>
   );
 
@@ -2679,57 +2654,6 @@ const ProfessionalDashboard = () => {
     </div>
   );
 
-  const AppointmentTrendsModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Appointment Trends</h2>
-          <button
-            onClick={() => setShowAppointmentTrendsModal(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        {appointmentTrends ? (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">Monthly Growth</h3>
-                <p className="text-3xl font-bold text-blue-600">{appointmentTrends.monthly_growth || 0}%</p>
-              </div>
-              <div className="bg-green-50 p-6 rounded-xl border border-green-200">
-                <h3 className="text-lg font-semibold text-green-900 mb-2">Peak Hours</h3>
-                <p className="text-3xl font-bold text-green-600">{appointmentTrends.peak_hours || 'N/A'}</p>
-              </div>
-              <div className="bg-purple-50 p-6 rounded-xl border border-purple-200">
-                <h3 className="text-lg font-semibold text-purple-900 mb-2">Busiest Day</h3>
-                <p className="text-3xl font-bold text-purple-600">{appointmentTrends.busiest_day || 'N/A'}</p>
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 p-6 rounded-xl">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Trends Data</h3>
-              <pre className="text-sm text-gray-600 whitespace-pre-wrap bg-white p-4 rounded-lg overflow-x-auto">
-                {JSON.stringify(appointmentTrends, null, 2)}
-              </pre>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <p className="text-gray-500">Loading appointment trends...</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
   const RecurringAppointmentModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
@@ -3967,7 +3891,6 @@ const ProfessionalDashboard = () => {
       {showDeleteAppointmentModal && <DeleteAppointmentModal />}
       {showAppointmentDetailsModal && <AppointmentDetailsModal />}
       {showAppointmentAnalyticsModal && <AppointmentAnalyticsModal />}
-      {showAppointmentTrendsModal && <AppointmentTrendsModal />}
       {showRecurringAppointmentModal && <RecurringAppointmentModal />}
       {showConflictCheckModal && <ConflictCheckModal />}
       {showRemindersModal && <RemindersModal />}
