@@ -412,14 +412,36 @@ const ProfessionalDashboard = () => {
   };
 
   // Optimized form change handlers using useCallback to prevent re-renders
-  const handleClientFormChange = useCallback((field) => (e) => {
-    const value = e.target.value;
-    setClientForm(prev => ({ ...prev, [field]: value }));
+  const handleClientNameChange = useCallback((e) => {
+    setClientForm(prev => ({ ...prev, name: e.target.value }));
   }, []);
 
-  const handleEditClientFormChange = useCallback((field) => (e) => {
-    const value = e.target.value;
-    setEditClientForm(prev => ({ ...prev, [field]: value }));
+  const handleClientEmailChange = useCallback((e) => {
+    setClientForm(prev => ({ ...prev, email: e.target.value }));
+  }, []);
+
+  const handleClientPhoneChange = useCallback((e) => {
+    setClientForm(prev => ({ ...prev, phone: e.target.value }));
+  }, []);
+
+  const handleClientStatusChange = useCallback((e) => {
+    setClientForm(prev => ({ ...prev, status: e.target.value }));
+  }, []);
+
+  const handleEditClientNameChange = useCallback((e) => {
+    setEditClientForm(prev => ({ ...prev, name: e.target.value }));
+  }, []);
+
+  const handleEditClientEmailChange = useCallback((e) => {
+    setEditClientForm(prev => ({ ...prev, email: e.target.value }));
+  }, []);
+
+  const handleEditClientPhoneChange = useCallback((e) => {
+    setEditClientForm(prev => ({ ...prev, phone: e.target.value }));
+  }, []);
+
+  const handleEditClientStatusChange = useCallback((e) => {
+    setEditClientForm(prev => ({ ...prev, status: e.target.value }));
   }, []);
 
   // Filter and search clients
@@ -1977,7 +1999,7 @@ const ProfessionalDashboard = () => {
             <input
               type="text"
               value={clientForm.name}
-              onChange={handleClientFormChange('name')}
+              onChange={handleClientNameChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -1988,7 +2010,7 @@ const ProfessionalDashboard = () => {
             <input
               type="email"
               value={clientForm.email}
-              onChange={handleClientFormChange('email')}
+              onChange={handleClientEmailChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -1999,7 +2021,7 @@ const ProfessionalDashboard = () => {
             <input
               type="tel"
               value={clientForm.phone}
-              onChange={handleClientFormChange('phone')}
+              onChange={handleClientPhoneChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -2008,7 +2030,7 @@ const ProfessionalDashboard = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={clientForm.status}
-              onChange={handleClientFormChange('status')}
+              onChange={handleClientStatusChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="active">Active</option>
@@ -2059,7 +2081,7 @@ const ProfessionalDashboard = () => {
             <input
               type="text"
               value={editClientForm.name}
-              onChange={handleEditClientFormChange('name')}
+              onChange={handleEditClientNameChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -2070,7 +2092,7 @@ const ProfessionalDashboard = () => {
             <input
               type="email"
               value={editClientForm.email}
-              onChange={handleEditClientFormChange('email')}
+              onChange={handleEditClientEmailChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -2081,7 +2103,7 @@ const ProfessionalDashboard = () => {
             <input
               type="tel"
               value={editClientForm.phone}
-              onChange={handleEditClientFormChange('phone')}
+              onChange={handleEditClientPhoneChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -2090,7 +2112,7 @@ const ProfessionalDashboard = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={editClientForm.status}
-              onChange={handleEditClientFormChange('status')}
+              onChange={handleEditClientStatusChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="active">Active</option>
