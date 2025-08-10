@@ -13,8 +13,6 @@ const getApiBaseUrl = () => {
 
 // Dashboard with modern UI
 const ProfessionalDashboard = () => {
-  console.log('ProfessionalDashboard component is rendering...');
-  
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -486,7 +484,7 @@ const ProfessionalDashboard = () => {
   };
 
   // Handle form submissions
-  const handleAddClient = async (e) => {
+  const handleAddClient = useCallback(async (e) => {
     e.preventDefault();
     
     // Validate form data
@@ -569,7 +567,7 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsAddingClient(false);
     }
-  };
+  }, [clientForm, setClients, setClientForm, setShowAddClientModal]);
 
   // Get specific client details
   const handleGetClientDetails = async (clientId) => {
@@ -588,7 +586,7 @@ const ProfessionalDashboard = () => {
   };
 
   // Update client
-  const handleUpdateClient = async (e) => {
+  const handleUpdateClient = useCallback(async (e) => {
     e.preventDefault();
     
     if (!selectedClient) {
@@ -621,7 +619,7 @@ const ProfessionalDashboard = () => {
       console.error('Error updating client:', error);
       alert(`Error updating client: ${error.message || 'Network error'}`);
     }
-  };
+  }, [selectedClient, editClientForm, clients, setClients, setShowEditClientModal, setSelectedClient]);
 
   // Delete client
   const handleDeleteClient = async () => {
@@ -713,7 +711,7 @@ const ProfessionalDashboard = () => {
     setShowDeleteClientModal(true);
   };
 
-  const handleAddAppointment = async (e) => {
+  const handleAddAppointment = useCallback(async (e) => {
     e.preventDefault();
     
     if (!appointmentForm.client_id || !appointmentForm.appointment_date || !appointmentForm.appointment_time) {
@@ -758,7 +756,7 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsAddingAppointment(false);
     }
-  };
+  }, [appointmentForm.client_id, appointmentForm.appointment_date, appointmentForm.appointment_time, appointmentForm.notes, setAppointments, setAppointmentForm, setShowAddAppointmentModal]);
 
   // Check appointment conflicts
   const handleCheckConflicts = async (e) => {
