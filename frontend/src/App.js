@@ -145,21 +145,25 @@ const ProfessionalDashboard = () => {
   const [showSystemStatusModal, setShowSystemStatusModal] = useState(false);
 
   // Check API Server status
-  // Debug API configuration
+  // Debug API configuration (run only once in development)
   useEffect(() => {
-    console.log('🔧 Environment Debug Info:');
-    console.log('NODE_ENV:', process.env.NODE_ENV);
-    console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
-    console.log('API Base URL:', getApiBaseUrl());
-    console.log('Health Endpoint:', createApiUrl(API_ENDPOINTS.health));
-    console.log('Environment variables:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
-  }, []);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 Environment Debug Info:');
+      console.log('NODE_ENV:', process.env.NODE_ENV);
+      console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+      console.log('API Base URL:', getApiBaseUrl());
+      console.log('Health Endpoint:', createApiUrl(API_ENDPOINTS.health));
+      console.log('Environment variables:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
+    }
+  }, []); // Empty dependency array to run only once
 
   const checkApiServerStatus = async () => {
     try {
       const startTime = Date.now();
       const apiUrl = createApiUrl(API_ENDPOINTS.health);
-      console.log('🔍 Checking API health at:', apiUrl);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Checking API health at:', apiUrl);
+      }
       
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -168,7 +172,9 @@ const ProfessionalDashboard = () => {
       });
       const responseTime = Date.now() - startTime;
       
-      console.log('✅ API response:', response.status, response.statusText);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ API response:', response.status, response.statusText);
+      }
       
       if (response.ok) {
         const healthData = await response.json().catch(() => ({}));
@@ -266,7 +272,9 @@ const ProfessionalDashboard = () => {
     setIsCheckingSystemStatus(true);
     
     try {
-      console.log('Checking system status...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Checking system status...');
+      }
       
       // Check all components in parallel
       const [apiStatus, dbStatus] = await Promise.allSettled([
@@ -274,7 +282,9 @@ const ProfessionalDashboard = () => {
         checkDatabaseStatus(),
       ]);
       
-      console.log('System status check completed');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('System status check completed');
+      }
       
       // Return overall system health
       const allHealthy = apiStatus.status === 'fulfilled' && apiStatus.value &&
@@ -282,7 +292,9 @@ const ProfessionalDashboard = () => {
       
       return allHealthy;
     } catch (error) {
-      console.error('System status check failed:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('System status check failed:', error);
+      }
       return false;
     } finally {
       setIsCheckingSystemStatus(false);
@@ -295,10 +307,14 @@ const ProfessionalDashboard = () => {
         setLoading(true);
         
         // Test backend connection first
-        console.log('Testing backend connection...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Testing backend connection...');
+        }
         const healthResponse = await fetch(createApiUrl(API_ENDPOINTS.health));
         if (healthResponse.ok) {
-          console.log('Backend is running and healthy');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Backend is running and healthy');
+          }
         } else {
           console.error('Backend health check failed');
         }
@@ -3597,11 +3613,13 @@ const ProfessionalDashboard = () => {
   };
 
   // Get dashboard analytics
-  const handleGetDashboardAnalytics = async () => {
+  const handleGetDashboardAnalytics = useCallback(async () => {
     setIsLoadingDashboardAnalytics(true);
     
     try {
-      console.log('Fetching dashboard analytics...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching dashboard analytics...');
+      }
       
       const response = await fetch(createApiUrl(API_ENDPOINTS.analytics.dashboard));
       
@@ -3609,7 +3627,9 @@ const ProfessionalDashboard = () => {
         const analytics = await response.json();
         setDashboardAnalytics(analytics);
         setShowDashboardAnalyticsModal(true);
-        console.log('Dashboard analytics:', analytics);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Dashboard analytics:', analytics);
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         alert(`Failed to fetch dashboard analytics: ${errorData.detail || 'Unknown error'}`);
@@ -3620,14 +3640,16 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsLoadingDashboardAnalytics(false);
     }
-  };
+  }, []);
 
   // Get system trends
-  const handleGetSystemTrends = async () => {
+  const handleGetSystemTrends = useCallback(async () => {
     setIsLoadingSystemTrends(true);
     
     try {
-      console.log('Fetching system trends...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching system trends...');
+      }
       
       const response = await fetch(createApiUrl(API_ENDPOINTS.analytics.trends));
       
@@ -3635,7 +3657,9 @@ const ProfessionalDashboard = () => {
         const trends = await response.json();
         setSystemTrends(trends);
         setShowSystemTrendsModal(true);
-        console.log('System trends:', trends);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('System trends:', trends);
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         alert(`Failed to fetch system trends: ${errorData.detail || 'Unknown error'}`);
@@ -3646,14 +3670,16 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsLoadingSystemTrends(false);
     }
-  };
+  }, []);
 
   // Get client activity report
-  const handleGetClientActivityReport = async () => {
+  const handleGetClientActivityReport = useCallback(async () => {
     setIsLoadingClientActivityReport(true);
     
     try {
-      console.log('Fetching client activity report...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching client activity report...');
+      }
       
       const response = await fetch(createApiUrl(API_ENDPOINTS.analytics.clientActivity));
       
@@ -3661,7 +3687,9 @@ const ProfessionalDashboard = () => {
         const report = await response.json();
         setClientActivityReport(report);
         setShowClientActivityReportModal(true);
-        console.log('Client activity report:', report);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Client activity report:', report);
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         alert(`Failed to fetch client activity report: ${errorData.detail || 'Unknown error'}`);
@@ -3672,14 +3700,16 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsLoadingClientActivityReport(false);
     }
-  };
+  }, []);
 
   // Get appointment performance report
-  const handleGetAppointmentPerformanceReport = async () => {
+  const handleGetAppointmentPerformanceReport = useCallback(async () => {
     setIsLoadingAppointmentPerformanceReport(true);
     
     try {
-      console.log('Fetching appointment performance report...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching appointment performance report...');
+      }
       
       const response = await fetch(createApiUrl(API_ENDPOINTS.analytics.appointmentPerformance));
       
@@ -3687,7 +3717,9 @@ const ProfessionalDashboard = () => {
         const report = await response.json();
         setAppointmentPerformanceReport(report);
         setShowAppointmentPerformanceReportModal(true);
-        console.log('Appointment performance report:', report);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Appointment performance report:', report);
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         alert(`Failed to fetch appointment performance report: ${errorData.detail || 'Unknown error'}`);
@@ -3698,7 +3730,7 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsLoadingAppointmentPerformanceReport(false);
     }
-  };
+  }, []);
 
   // System Status Modal
   const SystemStatusModal = () => (
@@ -3874,7 +3906,6 @@ const ProfessionalDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {console.log('🎨 Rendering main UI...')}
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
