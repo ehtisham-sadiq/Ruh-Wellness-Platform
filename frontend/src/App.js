@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import { createApiUrl, API_ENDPOINTS } from './config/api';
+import StableInput from './components/StableInput';
 
 // Import getApiBaseUrl for debugging
 const getApiBaseUrl = () => {
@@ -411,38 +412,20 @@ const ProfessionalDashboard = () => {
     setClientForm({ name: '', email: '', phone: '', status: 'active' });
   };
 
-  // Optimized form change handlers using useCallback to prevent re-renders
-  const handleClientNameChange = useCallback((e) => {
-    setClientForm(prev => ({ ...prev, name: e.target.value }));
-  }, []);
+  // Stable form change handlers using useRef to prevent re-renders
+  const clientFormHandlers = useRef({
+    name: (e) => setClientForm(prev => ({ ...prev, name: e.target.value })),
+    email: (e) => setClientForm(prev => ({ ...prev, email: e.target.value })),
+    phone: (e) => setClientForm(prev => ({ ...prev, phone: e.target.value })),
+    status: (e) => setClientForm(prev => ({ ...prev, status: e.target.value }))
+  });
 
-  const handleClientEmailChange = useCallback((e) => {
-    setClientForm(prev => ({ ...prev, email: e.target.value }));
-  }, []);
-
-  const handleClientPhoneChange = useCallback((e) => {
-    setClientForm(prev => ({ ...prev, phone: e.target.value }));
-  }, []);
-
-  const handleClientStatusChange = useCallback((e) => {
-    setClientForm(prev => ({ ...prev, status: e.target.value }));
-  }, []);
-
-  const handleEditClientNameChange = useCallback((e) => {
-    setEditClientForm(prev => ({ ...prev, name: e.target.value }));
-  }, []);
-
-  const handleEditClientEmailChange = useCallback((e) => {
-    setEditClientForm(prev => ({ ...prev, email: e.target.value }));
-  }, []);
-
-  const handleEditClientPhoneChange = useCallback((e) => {
-    setEditClientForm(prev => ({ ...prev, phone: e.target.value }));
-  }, []);
-
-  const handleEditClientStatusChange = useCallback((e) => {
-    setEditClientForm(prev => ({ ...prev, status: e.target.value }));
-  }, []);
+  const editClientFormHandlers = useRef({
+    name: (e) => setEditClientForm(prev => ({ ...prev, name: e.target.value })),
+    email: (e) => setEditClientForm(prev => ({ ...prev, email: e.target.value })),
+    phone: (e) => setEditClientForm(prev => ({ ...prev, phone: e.target.value })),
+    status: (e) => setEditClientForm(prev => ({ ...prev, status: e.target.value }))
+  });
 
   // Filter and search clients
   const getFilteredClients = () => {
@@ -1996,33 +1979,36 @@ const ProfessionalDashboard = () => {
         <form onSubmit={handleAddClient} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-            <input
+            <StableInput
               type="text"
               value={clientForm.name}
-              onChange={handleClientNameChange}
+              onChange={clientFormHandlers.current.name}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter client name"
               required
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-            <input
+            <StableInput
               type="email"
               value={clientForm.email}
-              onChange={handleClientEmailChange}
+              onChange={clientFormHandlers.current.email}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter email address"
               required
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input
+            <StableInput
               type="tel"
               value={clientForm.phone}
-              onChange={handleClientPhoneChange}
+              onChange={clientFormHandlers.current.phone}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter phone number"
             />
           </div>
           
@@ -2030,7 +2016,7 @@ const ProfessionalDashboard = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={clientForm.status}
-              onChange={handleClientStatusChange}
+              onChange={clientFormHandlers.current.status}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="active">Active</option>
@@ -2078,33 +2064,36 @@ const ProfessionalDashboard = () => {
         <form onSubmit={handleUpdateClient} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-            <input
+            <StableInput
               type="text"
               value={editClientForm.name}
-              onChange={handleEditClientNameChange}
+              onChange={editClientFormHandlers.current.name}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter client name"
               required
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-            <input
+            <StableInput
               type="email"
               value={editClientForm.email}
-              onChange={handleEditClientEmailChange}
+              onChange={editClientFormHandlers.current.email}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter email address"
               required
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input
+            <StableInput
               type="tel"
               value={editClientForm.phone}
-              onChange={handleEditClientPhoneChange}
+              onChange={editClientFormHandlers.current.phone}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter phone number"
             />
           </div>
           
@@ -2112,7 +2101,7 @@ const ProfessionalDashboard = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={editClientForm.status}
-              onChange={handleEditClientStatusChange}
+              onChange={editClientFormHandlers.current.status}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="active">Active</option>
