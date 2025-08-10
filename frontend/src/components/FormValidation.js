@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // Validation rules
 export const validationRules = {
@@ -96,7 +96,7 @@ export const useFormValidation = (initialValues = {}, validationSchema = {}) => 
   const [isValid, setIsValid] = useState(false);
 
   // Validate a single field
-  const validateField = (name, value) => {
+  const validateField = useCallback((name, value) => {
     if (!validationSchema[name]) return { isValid: true, message: '' };
 
     const fieldRules = validationSchema[name];
@@ -110,10 +110,10 @@ export const useFormValidation = (initialValues = {}, validationSchema = {}) => 
     }
 
     return { isValid: true, message: '' };
-  };
+  }, [validationSchema, values]);
 
   // Validate all fields
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors = {};
     let formIsValid = true;
 
@@ -128,23 +128,20 @@ export const useFormValidation = (initialValues = {}, validationSchema = {}) => 
     setErrors(newErrors);
     setIsValid(formIsValid);
     return formIsValid;
-  };
+  }, [validationSchema, validateField]);
 
-  // Handle field change
-  const handleChange = (name, value) => {
+  // Handle field change - optimized to prevent re-renders
+  const handleChange = useCallback((name, value) => {
     setValues(prev => ({ ...prev, [name]: value }));
     
-    // Clear error when user starts typing
+    // Clear error when user starts typing (but don't validate immediately)
     if (errors[name]) {
-      const validation = validateField(name, value);
-      if (validation.isValid) {
-        setErrors(prev => ({ ...prev, [name]: '' }));
-      }
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
-  };
+  }, [errors]);
 
   // Handle field blur
-  const handleBlur = (name) => {
+  const handleBlur = useCallback((name) => {
     setTouched(prev => ({ ...prev, [name]: true }));
     
     const validation = validateField(name);
@@ -152,26 +149,27 @@ export const useFormValidation = (initialValues = {}, validationSchema = {}) => 
       ...prev,
       [name]: validation.isValid ? '' : validation.message
     }));
-  };
+  }, [validateField]);
 
   // Reset form
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setValues(initialValues);
     setErrors({});
     setTouched({});
     setIsValid(false);
-  };
+  }, [initialValues]);
 
   // Set form values
-  const setFormValues = (newValues) => {
+  const setFormValues = useCallback((newValues) => {
     setValues(newValues);
-    validateForm();
-  };
+    // Validate after setting values, but debounced
+    setTimeout(() => validateForm(), 0);
+  }, [validateForm]);
 
-  // Validate on mount and when values change
+  // Validate only on mount - not on every value change to prevent re-renders
   useEffect(() => {
     validateForm();
-  }, [values]);
+  }, []); // Only run on mount
 
   return {
     values,

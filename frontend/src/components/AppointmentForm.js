@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, Clock, User, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -42,6 +42,19 @@ const AppointmentForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Memoized handlers to prevent re-renders
+  const handleSearchChange = useCallback((e) => {
+    setSearchTerm(e.target.value);
+  }, []);
+
+  const handleTimeChange = useCallback((e) => {
+    setFormData(prev => ({ ...prev, time: e.target.value }));
+  }, []);
+
+  const handleNotesChange = useCallback((e) => {
+    setFormData(prev => ({ ...prev, notes: e.target.value }));
+  }, []);
 
   // Reset form when initialData changes
   useEffect(() => {
@@ -215,7 +228,7 @@ const AppointmentForm = ({
                   <Input
                     placeholder="Search clients..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={handleSearchChange}
                     className="mb-2"
                   />
                 </div>
@@ -278,7 +291,7 @@ const AppointmentForm = ({
                 type="datetime-local"
                 id="time"
                 value={formData.time}
-                onChange={(e) => setFormData({...formData, time: e.target.value})}
+                onChange={handleTimeChange}
                 className={errors.time ? "border-red-300 focus:border-red-500" : ""}
                 min={new Date().toISOString().slice(0, 16)}
               />
@@ -328,7 +341,7 @@ const AppointmentForm = ({
               id="notes"
               placeholder="Add any additional notes or comments about this appointment..."
               value={formData.notes}
-              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              onChange={handleNotesChange}
               rows={3}
             />
             <p className="text-xs text-calm-500">

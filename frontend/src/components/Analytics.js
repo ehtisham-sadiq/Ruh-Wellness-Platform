@@ -25,6 +25,15 @@ const Analytics = () => {
   const [customDateFrom, setCustomDateFrom] = useState('');
   const [customDateTo, setCustomDateTo] = useState('');
 
+  // Memoized handlers to prevent re-renders
+  const handleCustomDateFromChange = useCallback((e) => {
+    setCustomDateFrom(e.target.value);
+  }, []);
+
+  const handleCustomDateToChange = useCallback((e) => {
+    setCustomDateTo(e.target.value);
+  }, []);
+
   const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
@@ -205,7 +214,7 @@ const Analytics = () => {
             id="customFrom"
             type="date"
             value={customDateFrom}
-            onChange={(e) => setCustomDateFrom(e.target.value)}
+            onChange={handleCustomDateFromChange}
           />
         </div>
         <div className="flex-1">
@@ -214,7 +223,7 @@ const Analytics = () => {
             id="customTo"
             type="date"
             value={customDateTo}
-            onChange={(e) => setCustomDateTo(e.target.value)}
+            onChange={handleCustomDateToChange}
           />
         </div>
       </div>
