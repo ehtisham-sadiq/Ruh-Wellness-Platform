@@ -267,39 +267,7 @@ const ProfessionalDashboard = () => {
     }
   };
 
-  // Comprehensive system status check
-  const checkSystemStatus = useCallback(async () => {
-    setIsCheckingSystemStatus(true);
-    
-    try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Checking system status...');
-      }
-      
-      // Check all components in parallel
-      const [apiStatus, dbStatus] = await Promise.allSettled([
-        checkApiServerStatus(),
-        checkDatabaseStatus(),
-      ]);
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log('System status check completed');
-      }
-      
-      // Return overall system health
-      const allHealthy = apiStatus.status === 'fulfilled' && apiStatus.value &&
-                        dbStatus.status === 'fulfilled' && dbStatus.value;
-      
-      return allHealthy;
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('System status check failed:', error);
-      }
-      return false;
-    } finally {
-      setIsCheckingSystemStatus(false);
-    }
-  }, []);
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -343,21 +311,83 @@ const ProfessionalDashboard = () => {
 
   // Initialize system status monitoring
   useEffect(() => {
-    // Auto-refresh system status
-    const startSystemStatusMonitoring = () => {
-      // Initial check
-      checkSystemStatus();
+    // Auto-refresh system status with stable function references
+    const performSystemCheck = async () => {
+      setIsCheckingSystemStatus(true);
       
-      // Set up periodic monitoring (every 2 minutes to reduce re-renders)
-      const interval = setInterval(checkSystemStatus, 120000);
-      
-      // Cleanup function
-      return () => clearInterval(interval);
+      try {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Checking system status...');
+        }
+        
+        // Check all components in parallel
+        const [apiStatus, dbStatus] = await Promise.allSettled([
+          checkApiServerStatus(),
+          checkDatabaseStatus(),
+        ]);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('System status check completed');
+        }
+        
+        // Return overall system health
+        const allHealthy = apiStatus.status === 'fulfilled' && apiStatus.value &&
+                          dbStatus.status === 'fulfilled' && dbStatus.value;
+        
+        return allHealthy;
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('System status check failed:', error);
+        }
+        return false;
+      } finally {
+        setIsCheckingSystemStatus(false);
+      }
     };
 
-    const cleanup = startSystemStatusMonitoring();
-    return cleanup;
-  }, [checkSystemStatus]);
+    // Initial check
+    performSystemCheck();
+    
+    // Set up periodic monitoring (every 2 minutes to reduce re-renders)
+    const interval = setInterval(performSystemCheck, 120000);
+    
+    // Cleanup function
+    return () => clearInterval(interval);
+  }, []); // Empty dependency array since we define the function inside useEffect
+
+  // Manual system status refresh for buttons
+  const handleManualSystemStatusRefresh = async () => {
+    setIsCheckingSystemStatus(true);
+    
+    try {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Manual system status refresh...');
+      }
+      
+      // Check all components in parallel
+      const [apiStatus, dbStatus] = await Promise.allSettled([
+        checkApiServerStatus(),
+        checkDatabaseStatus(),
+      ]);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Manual system status refresh completed');
+      }
+      
+      // Return overall system health
+      const allHealthy = apiStatus.status === 'fulfilled' && apiStatus.value &&
+                        dbStatus.status === 'fulfilled' && dbStatus.value;
+      
+      return allHealthy;
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Manual system status refresh failed:', error);
+      }
+      return false;
+    } finally {
+      setIsCheckingSystemStatus(false);
+    }
+  };
 
   // Test backend connection
   const testBackendConnection = async () => {
@@ -390,16 +420,6 @@ const ProfessionalDashboard = () => {
   const handleEditClientFormChange = useCallback((field) => (e) => {
     const value = e.target.value;
     setEditClientForm(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  const handleAppointmentFormChange = useCallback((field) => (e) => {
-    const value = e.target.value;
-    setAppointmentForm(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  const handleEditAppointmentFormChange = useCallback((field) => (e) => {
-    const value = e.target.value;
-    setEditAppointmentForm(prev => ({ ...prev, [field]: value }));
   }, []);
 
   // Filter and search clients
@@ -1265,7 +1285,7 @@ const ProfessionalDashboard = () => {
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-semibold text-gray-900">System Status</h3>
             <button
-              onClick={checkSystemStatus}
+              onClick={handleManualSystemStatusRefresh}
               disabled={isCheckingSystemStatus}
               className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
             >
@@ -3613,7 +3633,7 @@ const ProfessionalDashboard = () => {
   };
 
   // Get dashboard analytics
-  const handleGetDashboardAnalytics = useCallback(async () => {
+  const handleGetDashboardAnalytics = async () => {
     setIsLoadingDashboardAnalytics(true);
     
     try {
@@ -3640,10 +3660,10 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsLoadingDashboardAnalytics(false);
     }
-  }, []);
+  };
 
   // Get system trends
-  const handleGetSystemTrends = useCallback(async () => {
+  const handleGetSystemTrends = async () => {
     setIsLoadingSystemTrends(true);
     
     try {
@@ -3670,10 +3690,10 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsLoadingSystemTrends(false);
     }
-  }, []);
+  };
 
   // Get client activity report
-  const handleGetClientActivityReport = useCallback(async () => {
+  const handleGetClientActivityReport = async () => {
     setIsLoadingClientActivityReport(true);
     
     try {
@@ -3700,10 +3720,10 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsLoadingClientActivityReport(false);
     }
-  }, []);
+  };
 
   // Get appointment performance report
-  const handleGetAppointmentPerformanceReport = useCallback(async () => {
+  const handleGetAppointmentPerformanceReport = async () => {
     setIsLoadingAppointmentPerformanceReport(true);
     
     try {
@@ -3730,7 +3750,7 @@ const ProfessionalDashboard = () => {
     } finally {
       setIsLoadingAppointmentPerformanceReport(false);
     }
-  }, []);
+  };
 
   // System Status Modal
   const SystemStatusModal = () => (
@@ -3886,7 +3906,7 @@ const ProfessionalDashboard = () => {
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-4">
             <button
-              onClick={checkSystemStatus}
+              onClick={handleManualSystemStatusRefresh}
               disabled={isCheckingSystemStatus}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
