@@ -15,21 +15,6 @@ class Settings(BaseSettings):
         "sqlite:///./app.db"  # Default to SQLite for development
     )
     
-    # CORS Configuration for production
-    allowed_origins: List[str] = [
-        "http://localhost:3000",  # Local development
-        "https://ruh-wellness-platform.vercel.app",  # Production Vercel
-        "https://ruh-wellness-platform-git-main-ehtishams-projects-933e01fb.vercel.app",  # Git branch
-        "https://ruh-wellness-platform-1caj5ysrv-ehtishams-projects-933e01fb.vercel.app"  # Preview deployment
-    ]
-    
-    # Parse additional origins from environment variable
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        additional_origins = os.getenv("ALLOWED_ORIGINS", "")
-        if additional_origins:
-            self.allowed_origins.extend([origin.strip() for origin in additional_origins.split(",") if origin.strip()])
-    
     # Mock API Configuration
     mock_api_url: str = os.getenv("MOCK_API_URL", "https://your-mock-server-url.com")
     mock_api_key: str = os.getenv("MOCK_API_KEY", "safe-api-key-placeholder")
@@ -46,8 +31,28 @@ class Settings(BaseSettings):
     # Redis Configuration (for future use)
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     
+    @property
+    def allowed_origins(self) -> List[str]:
+        """Get all allowed origins including environment variable origins"""
+        # Base allowed origins
+        base_origins = [
+            "http://localhost:3000",  # Local development
+            "https://ruh-wellness-platform.vercel.app",  # Production Vercel
+            "https://ruh-wellness-platform-git-main-ehtishams-projects-933e01fb.vercel.app",  # Git branch
+            "https://ruh-wellness-platform-1caj5ysrv-ehtishams-projects-933e01fb.vercel.app"  # Preview deployment
+        ]
+        
+        # Add additional origins from environment variable
+        additional_origins = os.getenv("ALLOWED_ORIGINS", "")
+        if additional_origins:
+            env_origins = [origin.strip() for origin in additional_origins.split(",") if origin.strip()]
+            base_origins.extend(env_origins)
+        
+        return base_origins
+    
     class Config:
         env_file = ".env"
         case_sensitive = False
 
+# Create settings instance
 settings = Settings()
