@@ -207,7 +207,7 @@ The application demonstrates excellent API integration practices:
 #### 1. **Robust HTTP Client Implementation**
 ```javascript
 // Standardized fetch with error handling
-const response = await fetch('http://localhost:8000/api/clients/', {
+const response = await fetch('const API_BASE_URL = "https://ruh-wellness-platform-production.up.railway.app/api"', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(clientForm),
