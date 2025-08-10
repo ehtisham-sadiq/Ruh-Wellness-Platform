@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import { createApiUrl, API_ENDPOINTS } from './config/api';
-import StableInput from './components/StableInput';
+import AddClientForm from './components/AddClientForm';
+import EditClientForm from './components/EditClientForm';
+import Modal from './components/Modal';
 
 // Import getApiBaseUrl for debugging
 const getApiBaseUrl = () => {
@@ -36,7 +38,6 @@ const ProfessionalDashboard = () => {
   const [showRemindersModal, setShowRemindersModal] = useState(false);
   
   // Loading states
-  const [isAddingClient, setIsAddingClient] = useState(false);
   const [isAddingAppointment, setIsAddingAppointment] = useState(false);
   const [isUpdatingAppointment, setIsUpdatingAppointment] = useState(false);
   const [isDeletingAppointment, setIsDeletingAppointment] = useState(false);
@@ -94,21 +95,7 @@ const ProfessionalDashboard = () => {
   const [isLoadingClientActivityReport, setIsLoadingClientActivityReport] = useState(false);
   const [isLoadingAppointmentPerformanceReport, setIsLoadingAppointmentPerformanceReport] = useState(false);
   
-  // Form states
-  const [clientForm, setClientForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    status: 'active'
-  });
-  
-  const [editClientForm, setEditClientForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    status: 'active'
-  });
-
+  // Form states - simplified (individual forms manage their own state)
   const [appointmentForm, setAppointmentForm] = useState({
     client_id: '',
     appointment_date: '',
@@ -405,25 +392,19 @@ const ProfessionalDashboard = () => {
     }
   };
 
-  // Clear client form
-  const clearClientForm = () => {
-    setClientForm({ name: '', email: '', phone: '', status: 'active' });
+  // Client management handlers - simplified to work with form components
+  const handleClientAdded = (newClient) => {
+    setClients(prevClients => [...prevClients, newClient]);
+    setShowAddClientModal(false);
   };
 
-  // Stable form change handlers using useRef to prevent re-renders
-  const clientFormHandlers = useRef({
-    name: (e) => setClientForm(prev => ({ ...prev, name: e.target.value })),
-    email: (e) => setClientForm(prev => ({ ...prev, email: e.target.value })),
-    phone: (e) => setClientForm(prev => ({ ...prev, phone: e.target.value })),
-    status: (e) => setClientForm(prev => ({ ...prev, status: e.target.value }))
-  });
-
-  const editClientFormHandlers = useRef({
-    name: (e) => setEditClientForm(prev => ({ ...prev, name: e.target.value })),
-    email: (e) => setEditClientForm(prev => ({ ...prev, email: e.target.value })),
-    phone: (e) => setEditClientForm(prev => ({ ...prev, phone: e.target.value })),
-    status: (e) => setEditClientForm(prev => ({ ...prev, status: e.target.value }))
-  });
+  const handleClientUpdated = (updatedClient) => {
+    setClients(clients.map(client => 
+      client.id === updatedClient.id ? updatedClient : client
+    ));
+    setShowEditClientModal(false);
+    setSelectedClient(null);
+  };
 
   // Filter and search clients
   const getFilteredClients = () => {
@@ -483,92 +464,6 @@ const ProfessionalDashboard = () => {
     setCurrentPage(1); // Reset to first page when changing page size
   };
 
-  // Handle form submissions
-  const handleAddClient = useCallback(async (e) => {
-    e.preventDefault();
-    
-    // Validate form data
-    if (!clientForm.name || !clientForm.email || !clientForm.phone) {
-      alert('Please fill in all required fields (Name, Email, Phone)');
-      return;
-    }
-    
-    // Test backend connection first
-    const isBackendRunning = await testBackendConnection();
-    if (!isBackendRunning) {
-      alert('Backend server is not running. Please start the backend server first.\n\nTo start the backend:\n1. Open terminal\n2. Navigate to the backend folder\n3. Run: python run_dev.py');
-      return;
-    }
-    
-    setIsAddingClient(true);
-    
-    try {
-      console.log('Submitting client data:', clientForm);
-      
-      const response = await fetch(createApiUrl(API_ENDPOINTS.clients), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(clientForm),
-      });
-      
-      console.log('Response status:', response.status);
-      
-      if (response.ok) {
-        const newClient = await response.json();
-        console.log('New client created:', newClient);
-        
-        // Update the clients list
-        setClients(prevClients => [...prevClients, newClient]);
-        
-        // Reset form
-        clearClientForm();
-        
-        // Close modal
-        setShowAddClientModal(false);
-        
-        // Show success message
-        alert('Client added successfully!');
-      } else {
-        let errorMessage = 'Unknown error';
-        try {
-          const errorData = await response.json();
-          console.error('Backend error response:', errorData);
-          
-          // Handle different error formats
-          if (errorData.detail) {
-            errorMessage = errorData.detail;
-          } else if (errorData.message) {
-            errorMessage = errorData.message;
-          } else if (typeof errorData === 'string') {
-            errorMessage = errorData;
-          } else if (errorData.error) {
-            errorMessage = errorData.error;
-          }
-        } catch (parseError) {
-          console.error('Failed to parse error response:', parseError);
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
-        
-        console.error('Failed to add client:', response.status, errorMessage);
-        
-        // Show error message
-        alert(`Failed to add client: ${errorMessage}`);
-        
-        // If it's a duplicate email error, clear the email field to help user
-        if (errorMessage.includes('email already exists')) {
-          setClientForm(prev => ({ ...prev, email: '' }));
-        }
-      }
-    } catch (error) {
-      console.error('Error adding client:', error);
-      alert(`Error adding client: ${error.message || 'Network error'}`);
-    } finally {
-      setIsAddingClient(false);
-    }
-  }, [clientForm, setClients, setClientForm, setShowAddClientModal]);
-
   // Get specific client details
   const handleGetClientDetails = async (clientId) => {
     try {
@@ -585,41 +480,7 @@ const ProfessionalDashboard = () => {
     }
   };
 
-  // Update client
-  const handleUpdateClient = useCallback(async (e) => {
-    e.preventDefault();
-    
-    if (!selectedClient) {
-      alert('No client selected for update');
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${createApiUrl(API_ENDPOINTS.clients)}${selectedClient.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editClientForm),
-      });
-      
-      if (response.ok) {
-        const updatedClient = await response.json();
-        setClients(clients.map(client => 
-          client.id === updatedClient.id ? updatedClient : client
-        ));
-        setShowEditClientModal(false);
-        setSelectedClient(null);
-        alert('Client updated successfully!');
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        alert(`Failed to update client: ${errorData.detail || errorData.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Error updating client:', error);
-      alert(`Error updating client: ${error.message || 'Network error'}`);
-    }
-  }, [selectedClient, editClientForm, clients, setClients, setShowEditClientModal, setSelectedClient]);
+  // Update client - now handled by EditClientForm component
 
   // Delete client
   const handleDeleteClient = async () => {
@@ -696,12 +557,6 @@ const ProfessionalDashboard = () => {
   // Open edit client modal
   const openEditClientModal = (client) => {
     setSelectedClient(client);
-    setEditClientForm({
-      name: client.name || '',
-      email: client.email || '',
-      phone: client.phone || '',
-      status: client.status || 'active'
-    });
     setShowEditClientModal(true);
   };
 
@@ -1958,176 +1813,8 @@ const ProfessionalDashboard = () => {
     );
   };
 
-  // Modal Components
-  const AddClientModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Add New Client</h2>
-          <button
-            onClick={() => setShowAddClientModal(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <form onSubmit={handleAddClient} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-            <StableInput
-              type="text"
-              value={clientForm.name}
-              onChange={clientFormHandlers.current.name}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter client name"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-            <StableInput
-              type="email"
-              value={clientForm.email}
-              onChange={clientFormHandlers.current.email}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter email address"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <StableInput
-              type="tel"
-              value={clientForm.phone}
-              onChange={clientFormHandlers.current.phone}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter phone number"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              value={clientForm.status}
-              onChange={clientFormHandlers.current.status}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="pending">Pending</option>
-            </select>
-          </div>
-          
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={() => setShowAddClientModal(false)}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isAddingClient}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isAddingClient ? 'Adding...' : 'Add Client'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
-  const EditClientModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Client</h2>
-          <button
-            onClick={() => setShowEditClientModal(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <form onSubmit={handleUpdateClient} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-            <StableInput
-              type="text"
-              value={editClientForm.name}
-              onChange={editClientFormHandlers.current.name}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter client name"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-            <StableInput
-              type="email"
-              value={editClientForm.email}
-              onChange={editClientFormHandlers.current.email}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter email address"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <StableInput
-              type="tel"
-              value={editClientForm.phone}
-              onChange={editClientFormHandlers.current.phone}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter phone number"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              value={editClientForm.status}
-              onChange={editClientFormHandlers.current.status}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="pending">Pending</option>
-            </select>
-          </div>
-          
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={() => setShowEditClientModal(false)}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Update Client
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
+  // Modal Components (Note: AddClientModal and EditClientModal are now separate components)
+  
   const DeleteClientModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
@@ -3989,9 +3676,31 @@ const ProfessionalDashboard = () => {
         </div>
       )}
 
-      {/* Modals */}
-      {showAddClientModal && <AddClientModal />}
-      {showEditClientModal && <EditClientModal />}
+      {/* Modals - Updated with new component structure */}
+      <Modal
+        isOpen={showAddClientModal}
+        onClose={() => setShowAddClientModal(false)}
+        title="Add New Client"
+      >
+        <AddClientForm
+          onClientAdded={handleClientAdded}
+          onClose={() => setShowAddClientModal(false)}
+          testBackendConnection={testBackendConnection}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={showEditClientModal}
+        onClose={() => setShowEditClientModal(false)}
+        title="Edit Client"
+      >
+        <EditClientForm
+          client={selectedClient}
+          onClientUpdated={handleClientUpdated}
+          onClose={() => setShowEditClientModal(false)}
+        />
+      </Modal>
+
       {showDeleteClientModal && <DeleteClientModal />}
       {showClientDetailsModal && <ClientDetailsModal />}
       {showClientAnalyticsModal && <ClientAnalyticsModal />}
