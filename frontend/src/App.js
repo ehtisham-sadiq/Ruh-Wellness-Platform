@@ -2,6 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import { createApiUrl, API_ENDPOINTS } from './config/api';
 
+// Import getApiBaseUrl for debugging
+const getApiBaseUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.REACT_APP_API_URL || 'https://ruh-wellness-platform-production.up.railway.app';
+  }
+  return 'http://localhost:8000';
+};
+
 // Dashboard with modern UI
 const ProfessionalDashboard = () => {
   console.log('ProfessionalDashboard component is rendering...');
@@ -137,18 +145,34 @@ const ProfessionalDashboard = () => {
   const [showSystemStatusModal, setShowSystemStatusModal] = useState(false);
 
   // Check API Server status
+  // Debug API configuration
+  useEffect(() => {
+    console.log('🔧 Environment Debug Info:');
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+    console.log('API Base URL:', getApiBaseUrl());
+    console.log('Health Endpoint:', createApiUrl(API_ENDPOINTS.health));
+    console.log('Environment variables:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
+  }, []);
+
   const checkApiServerStatus = async () => {
     try {
       const startTime = Date.now();
-      const response = await fetch(createApiUrl(API_ENDPOINTS.health), {
+      const apiUrl = createApiUrl(API_ENDPOINTS.health);
+      console.log('🔍 Checking API health at:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(5000) // 5 second timeout
       });
       const responseTime = Date.now() - startTime;
       
+      console.log('✅ API response:', response.status, response.statusText);
+      
       if (response.ok) {
         const healthData = await response.json().catch(() => ({}));
+        console.log('✅ Health data:', healthData);
         setSystemStatus(prev => ({
           ...prev,
           apiServer: {
@@ -160,6 +184,7 @@ const ProfessionalDashboard = () => {
         }));
         return true;
       } else {
+        console.log('❌ API health check failed:', response.status, response.statusText);
         setSystemStatus(prev => ({
           ...prev,
           apiServer: {
@@ -172,13 +197,15 @@ const ProfessionalDashboard = () => {
         return false;
       }
     } catch (error) {
+      console.log('❌ API health check error:', error.name, error.message);
+      console.log('❌ Full error:', error);
       setSystemStatus(prev => ({
         ...prev,
         apiServer: {
           status: 'offline',
           message: error.name === 'TimeoutError' ? 'Timeout' : 'Connection Failed',
           lastChecked: new Date().toISOString(),
-          details: { error: error.message }
+          details: { error: error.message, errorType: error.name }
         }
       }));
       return false;
@@ -319,7 +346,7 @@ const ProfessionalDashboard = () => {
   // Test backend connection
   const testBackendConnection = async () => {
     try {
-      const response = await fetch('createApiUrl(API_ENDPOINTS.health)');
+      const response = await fetch(createApiUrl(API_ENDPOINTS.health));
       if (response.ok) {
         console.log('Backend is running and healthy');
         return true;
@@ -418,7 +445,7 @@ const ProfessionalDashboard = () => {
     try {
       console.log('Submitting client data:', clientForm);
       
-      const response = await fetch('createApiUrl(API_ENDPOINTS.clients)', {
+      const response = await fetch(createApiUrl(API_ENDPOINTS.clients), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -485,7 +512,7 @@ const ProfessionalDashboard = () => {
   // Get specific client details
   const handleGetClientDetails = async (clientId) => {
     try {
-      const response = await fetch(`createApiUrl(API_ENDPOINTS.clients)${clientId}`);
+      const response = await fetch(`${createApiUrl(API_ENDPOINTS.clients)}${clientId}`);
       if (response.ok) {
         const clientData = await response.json();
         setSelectedClient(clientData);
@@ -508,7 +535,7 @@ const ProfessionalDashboard = () => {
     }
     
     try {
-      const response = await fetch(`createApiUrl(API_ENDPOINTS.clients)${selectedClient.id}`, {
+      const response = await fetch(`${createApiUrl(API_ENDPOINTS.clients)}${selectedClient.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -537,7 +564,7 @@ const ProfessionalDashboard = () => {
   // Delete client
   const handleDeleteClient = async () => {
     try {
-      const response = await fetch(`createApiUrl(API_ENDPOINTS.clients)${selectedClient.id}`, {
+      const response = await fetch(`${createApiUrl(API_ENDPOINTS.clients)}${selectedClient.id}`, {
         method: 'DELETE',
       });
       
@@ -587,7 +614,7 @@ const ProfessionalDashboard = () => {
   // Export clients to CSV
   const handleExportClientsCSV = async () => {
     try {
-      const response = await fetch('createApiUrl(API_ENDPOINTS.clients)export/csv');
+      const response = await fetch(`${createApiUrl(API_ENDPOINTS.clients)}export/csv`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -643,7 +670,7 @@ const ProfessionalDashboard = () => {
       
       console.log('Submitting appointment data:', appointmentData);
       
-      const response = await fetch('createApiUrl(API_ENDPOINTS.appointments)', {
+      const response = await fetch(createApiUrl(API_ENDPOINTS.appointments), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -690,7 +717,7 @@ const ProfessionalDashboard = () => {
       
       console.log('Checking conflicts for:', conflictData);
       
-      const response = await fetch('createApiUrl(API_ENDPOINTS.appointments)conflicts', {
+      const response = await fetch(`${createApiUrl(API_ENDPOINTS.appointments)}conflicts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -718,7 +745,7 @@ const ProfessionalDashboard = () => {
     try {
       console.log('Fetching appointment analytics...');
       
-      const response = await fetch('createApiUrl(API_ENDPOINTS.appointments)analytics');
+      const response = await fetch(`${createApiUrl(API_ENDPOINTS.appointments)}analytics`);
       
       if (response.ok) {
         const analytics = await response.json();
@@ -759,7 +786,7 @@ const ProfessionalDashboard = () => {
       
       console.log('Creating recurring appointments:', recurringData);
       
-      const response = await fetch('createApiUrl(API_ENDPOINTS.appointments)recurring', {
+      const response = await fetch(`${createApiUrl(API_ENDPOINTS.appointments)}recurring`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -903,7 +930,7 @@ const ProfessionalDashboard = () => {
     try {
       console.log('Fetching pending reminders...');
       
-      const response = await fetch('createApiUrl(API_ENDPOINTS.appointments)reminders/pending');
+      const response = await fetch(`${createApiUrl(API_ENDPOINTS.appointments)}reminders/pending`);
       
       if (response.ok) {
         const reminders = await response.json();

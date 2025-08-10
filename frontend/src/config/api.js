@@ -22,7 +22,8 @@ export { createApiUrl };
 
 // API Endpoints
 export const API_ENDPOINTS = {
-  health: '/api/health',
+  health: '/health',
+  healthDetailed: '/health/detailed',
   clients: '/api/clients/',
   appointments: '/api/appointments/',
   analytics: {
